@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<DataForm xmlns="http://www.enova.pl/schema/form.xsd" DataType="PracaDyplomowaNT.CsvParams, PracaDyplomowaNT" Priority="9000">
+  <Page Name="ParametersPage" DataContext="{DataSource}" CaptionHtml="Wybierz parametry importu">
+    <Field CaptionHtml="Ścieżka" LabelWidth="10" Width="50" EditValue="{FilePath}" Class="FileEdit"/>
+    <Field CaptionHtml="Definicja zamówienia" LabelWidth="10" Width="50" EditValue="{OrderDefinition}"/>
+  </Page>
+</DataForm>

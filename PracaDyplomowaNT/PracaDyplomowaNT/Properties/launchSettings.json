@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "PracaDyplomowaNT": {
+      "commandName": "Executable",
+      "executablePath": "C:\\enova\\SonetaExplorer32.exe",
+      "commandLineArgs": "/nodbextensions"
+    }
+  }
+}

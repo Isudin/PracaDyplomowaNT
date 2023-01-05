@@ -1,0 +1,14 @@
+﻿<?xml version="1.0"?>
+<DataForm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+          xmlns="http://www.enova.pl/schema/form.xsd"
+          RightName="Page:ConfigPage"
+          Priority="100001"
+          DataType="Config">
+  <Page Name="ConfigPage" CaptionHtml="Praca Dyplomowa/Config" DataContext="{new Config}">
+    <Group CaptionHtml="Blokowanie zamówień ponad limit kredytowy">
+      <Field CaptionHtml="Cecha z numerem paczkomatu" LabelWidth="50" Width="50" EditValue="{TargetPointFeature}"/>
+      <Field CaptionHtml="Cecha określająca czy płatność za pobraniem" LabelWidth="50" Width="50" EditValue="{CodFeature}"/>
+    </Group>
+  </Page>
+</DataForm>
