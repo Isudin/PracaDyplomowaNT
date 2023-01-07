@@ -6,9 +6,13 @@
           Priority="100001"
           DataType="Config">
   <Page Name="ConfigPage" CaptionHtml="Praca Dyplomowa/Config" DataContext="{new Config}">
-    <Group CaptionHtml="Blokowanie zamówień ponad limit kredytowy">
+    <Group CaptionHtml="Import zamówień">
       <Field CaptionHtml="Cecha z numerem paczkomatu" LabelWidth="50" Width="50" EditValue="{TargetPointFeature}"/>
       <Field CaptionHtml="Cecha określająca czy płatność za pobraniem" LabelWidth="50" Width="50" EditValue="{CodFeature}"/>
+      <Field CaptionHtml="Domyślna usługa dostawy" LabelWidth="50" Width="50" EditValue="{DefaultDeliveryService}"/>
+    </Group>
+    <Group CaptionHtml="ShipX">
+      <Field CaptionHtml="Cecha z gabarytem paczki" LabelWidth="50" Width="50" EditValue="{ParcelTemplateTypeFeature}"/>
     </Group>
   </Page>
 </DataForm>

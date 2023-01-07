@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using PracaDyplomowaNT.OrderImport;
 using Soneta.Business;
+using Soneta.Business.UI;
 using Soneta.CRM;
 using Soneta.Handel;
 using Soneta.Magazyny;
@@ -37,7 +38,7 @@ namespace PracaDyplomowaNT.OrderImport
 
         #endregion
 
-        public Date date = new Date();
+        private int _createdDocuments = 0;
 
         private class OrdersByContractor
         {
@@ -60,8 +61,8 @@ namespace PracaDyplomowaNT.OrderImport
         [Context] public Magazyn Warehouse { get; set; }
         public Config Config { get; set; }
 
-        [Action("Zaimportuj zamówienia CSV", Mode = ActionMode.SingleSession | ActionMode.Progress)]
-        public void ImportOrders()
+        [Action("PD_NT/Zaimportuj zamówienia CSV", Mode = ActionMode.SingleSession | ActionMode.Progress)]
+        public object ImportOrders()
         {
             string[] content = ReadCsvFromFile(Parameters.FilePath);
             if (!content.Any())
@@ -70,6 +71,11 @@ namespace PracaDyplomowaNT.OrderImport
             Config = new Config() { Session = Session };
             List<OrdersByContractor> ordersByContractor = GetDeserializedOrdersByContractor(content);
             CreateDocuments(ordersByContractor);
+
+            if (_createdDocuments > 0)
+                return new MessageBoxInformation("Import zamówień", $"Pomyślnie zaimportowano {_createdDocuments} zamówień.");
+
+            return new MessageBoxInformation("Import zamówieńa", $"Nie zaimportowano żadnego zamówienia.");
         }
 
         private string[] ReadCsvFromFile(string uri)
@@ -128,10 +134,7 @@ namespace PracaDyplomowaNT.OrderImport
                     View contractors = crm.Kontrahenci.CreateView();
                     contractors.Condition = new FieldCondition.Equal("Nazwa", $"{order.FirstName} {order.LastName}");
 
-                    if (contractors.Any())
-                        contractor = (Kontrahent)contractors.First();
-                    else
-                        contractor = CreateContractor(order, crm);
+                    contractor = contractors.Any() ? (Kontrahent)contractors.First() : CreateContractor(order, crm);
 
                     UpdateContractor(order, contractor);
 
@@ -206,6 +209,8 @@ namespace PracaDyplomowaNT.OrderImport
 
                 CreateDocument(ordersByContractor);
             }
+
+            _createdDocuments = assignedOrders.Count;
         }
 
         private void CreateDocument(OrdersByContractor ordersByContractor)
@@ -224,7 +229,9 @@ namespace PracaDyplomowaNT.OrderImport
                     document.Features[Config.CodFeature] = ordersByContractor.Cod;
 
                     foreach (Order importedOrder in ordersByContractor.Orders)
-                        CreatePosition(document, importedOrder, handelModule);
+                        CreatePosition(handelModule, document, importedOrder);
+
+                    AddDefaultService(handelModule, document);
 
                     transaction.CommitUI();
                 }
@@ -233,13 +240,22 @@ namespace PracaDyplomowaNT.OrderImport
             }
         }
 
-        private void CreatePosition(DokumentHandlowy document, Order order, HandelModule handelModule)
+        private void CreatePosition(HandelModule handelModule, DokumentHandlowy document, Order order)
+            => CreatePosition(handelModule, document, GetWareById(order.ItemId), order.Price, order.Quantity);
+
+        private void AddDefaultService(HandelModule handelModule, DokumentHandlowy document)
+        {
+            Towar ware = Config.DefaultDeliveryService;
+            CreatePosition(handelModule, document, ware, ware.Ceny["Detaliczna"].Brutto, new Quantity(1));
+        }
+
+        private void CreatePosition(HandelModule handelModule, DokumentHandlowy document, Towar ware, DoubleCy price, Quantity quantity)
         {
             var position = new PozycjaDokHandlowego(document);
             handelModule.PozycjeDokHan.AddRow(position);
-            position.Towar = GetWareById(order.ItemId);
-            position.Cena = order.Price;
-            position.Ilosc = order.Quantity;
+            position.Towar = ware;
+            position.Cena = price;
+            position.Ilosc = quantity;
         }
 
         private Towar GetWareById(string id) => TowaryModule.GetInstance(Session).Towary.WgKodu[id];

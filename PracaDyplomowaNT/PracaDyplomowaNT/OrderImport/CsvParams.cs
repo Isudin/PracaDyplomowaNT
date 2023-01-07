@@ -1,5 +1,7 @@
 ﻿using Soneta.Business;
+using Soneta.Business.UI;
 using Soneta.Handel;
+using Soneta.Types;
 
 namespace PracaDyplomowaNT.OrderImport
 {
@@ -8,7 +10,7 @@ namespace PracaDyplomowaNT.OrderImport
         public CsvParams(Context cx) : base(cx)
         {
         }
-
+        
         public string FilePath { get; set; }
 
         public object GetListOrderDefinition() => HandelModule.GetInstance(Session).DefDokHandlowych.WgKategorii[KategoriaHandlowa.ZamówienieOdbiorcy];
