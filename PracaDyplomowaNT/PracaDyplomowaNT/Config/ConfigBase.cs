@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text;
 using Soneta.Business;
 using Soneta.Business.Db;
 using Soneta.Config;
@@ -25,7 +26,7 @@ namespace PracaDyplomowaNT
             }
         }
 
-        protected void SetVal<T>(string name, T value, AttributeType type)
+        protected void SetValue<T>(string name, T value, AttributeType type)
         {
             using (ITransaction t = Root.Session.Logout(true))
             {
@@ -47,7 +48,7 @@ namespace PracaDyplomowaNT
             }
         }
 
-        protected T GetVal<T>(string name, T def)
+        protected T GetValue<T>(string name, T def)
         {
             if (Root == null)
                 return def;
@@ -80,6 +81,42 @@ namespace PracaDyplomowaNT
             }
 
             return res;
+        }
+
+        protected string GetValueNoLimitChars(string name = "", string def = "", int propertiesToReset = 10)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < propertiesToReset; i++)
+                sb.Append(GetValue($"{name}Part{i}", def));
+
+            return sb.ToString();
+        }
+
+        protected void SetValueNoLimitChars(string value, string name = "", AttributeType attrType = AttributeType._null, int propertiesToReset = 10)
+        {
+            var startSubstring = 0;
+            var length = value.Length;
+            for (int i = 0; i < propertiesToReset; i++)
+            {
+                if (length < 256)
+                {
+                    if (i == 0)
+                        SetValue($"{name}Part{i}", value, attrType);
+                    else
+                        SetValue($"{name}Part{i}", "", attrType);
+                }
+                else
+                {
+                    if (startSubstring + 255 < length)
+                        SetValue($"{name}Part{i}", value.Substring(startSubstring, 255), attrType);
+                    else if (length - startSubstring > 0)
+                        SetValue($"{name}Part{i}", value.Substring(startSubstring, length - startSubstring), attrType);
+                    else
+                        SetValue($"{name}Part{i}", "", attrType);
+
+                    startSubstring += 255;
+                }
+            }
         }
     }
 }

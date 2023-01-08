@@ -12,7 +12,12 @@
       <Field CaptionHtml="Domyślna usługa dostawy" LabelWidth="50" Width="50" EditValue="{DefaultDeliveryService}"/>
     </Group>
     <Group CaptionHtml="ShipX">
+      <Field CaptionHtml="Login ShipX" LabelWidth="50" Width="50" EditValue="{ApiUsername}"/>
+      <Field CaptionHtml="Hasło Shipx" LabelWidth="50" Width="50" EditValue="{ApiToken}" Class="PasswordEdit"/>
       <Field CaptionHtml="Cecha z gabarytem paczki" LabelWidth="50" Width="50" EditValue="{ParcelTemplateTypeFeature}"/>
+      <Field CaptionHtml="Cecha z numerem śledzenia przesyłki" LabelWidth="50" Width="50" EditValue="{ParcelTrackingNumberFeature}"/>
+      <Field CaptionHtml="Cecha z id przesyłki" LabelWidth="50" Width="50" EditValue="{ParcelIdFeature}"/>
+      <Field CaptionHtml="Cecha ze statusem przesyłki" LabelWidth="50" Width="50" EditValue="{ParcelStatusFeature}"/>
     </Group>
   </Page>
 </DataForm>

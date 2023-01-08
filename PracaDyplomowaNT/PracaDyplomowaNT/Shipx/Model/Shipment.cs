@@ -7,24 +7,24 @@ namespace PracaDyplomowaNT.Shipx.Model
     public class Shipment
     {
         [JsonProperty("href")] public string Href { get; set; }
-        [JsonProperty("id")] public string Id { get; set; }
-        [JsonProperty("status")] public string Status { get; set; }
-        [JsonProperty("parcels")] public List<Parcel> Parcels { get; set; }
-        [JsonProperty("custom_attributes")] public CustomAttributes CustomAttributes { get; set; }
-        [JsonProperty("sender")] public Sender Sender { get; set; }
-        [JsonProperty("receiver")] public Receiver Receiver { get; set; }
+        [JsonProperty("id")] public int Id { get; set; }
         [JsonProperty("created_at")] public DateTime CreatedAt { get; set; }
-        [JsonProperty("cod")] public Cod Cod { get; set; }
-        [JsonProperty("insurance")] public Insurance Insurance { get; set; }
-        [JsonProperty("additional_services")] public List<string> AdditionalServices { get; set; }
-        [JsonProperty("reference")] public string Reference { get; set; }
-        [JsonProperty("is_return")] public bool IsReturn { get; set; }
-        [JsonProperty("tracking_number")] public string TrackingNumber { get; set; }
         [JsonProperty("created_by_id")] public int CreatedById { get; set; }
         [JsonProperty("offers")] public List<Offer> Offers { get; set; }
         [JsonProperty("selected_offer")] public Offer SelectedOffer { get; set; }
-        // [JsonProperty("transactions")] public List<Transaction> Transactions { get; set; }
         [JsonProperty("sending_method")] public string SendingMethod { get; set; }
+        [JsonProperty("receiver")] public Receiver Receiver { get; set; }
+        [JsonProperty("sender")] public Sender Sender { get; set; }
+        [JsonProperty("parcels")] public List<Parcel> Parcels { get; set; }
+        [JsonProperty("custom_attributes")] public CustomAttributes CustomAttributes { get; set; }
+        [JsonProperty("cod")] public Cod Cod { get; set; }
+        [JsonProperty("insurance")] public Insurance Insurance { get; set; }
+        [JsonProperty("reference")] public string Reference { get; set; }
+        [JsonProperty("service")] public string Service { get; set; }
+        [JsonProperty("additional_services")] public List<string> AdditionalServices { get; set; }
+        [JsonProperty("tracking_number")] public string TrackingNumber { get; set; }
+        [JsonProperty("status")] public string Status { get; set; }
+        [JsonProperty("is_return")] public bool IsReturn { get; set; }
         [JsonProperty("external_customer_id")] public string ExternalCustomerId { get; set; }
     }
 
@@ -47,7 +47,7 @@ namespace PracaDyplomowaNT.Shipx.Model
 
     public class Cod
     {
-        [JsonProperty("amount")] public double Amount { get; set; }
+        [JsonProperty("amount")] public double? Amount { get; set; }
         [JsonProperty("currency")] public string Currency { get; set; }
     }
 
@@ -61,7 +61,7 @@ namespace PracaDyplomowaNT.Shipx.Model
 
     public class Insurance
     {
-        [JsonProperty("amount")] public int Amount { get; set; }
+        [JsonProperty("amount")] public double? Amount { get; set; }
         [JsonProperty("currency")] public string Currency { get; set; }
     }
 
@@ -72,11 +72,9 @@ namespace PracaDyplomowaNT.Shipx.Model
         [JsonProperty("service")] public Service Service { get; set; }
         [JsonProperty("status")] public string Status { get; set; }
         [JsonProperty("expires_at")] public DateTime ExpiresAt { get; set; }
-        [JsonProperty("rate")] public double Rate { get; set; }
+        [JsonProperty("rate")] public double? Rate { get; set; }
         [JsonProperty("currency")] public string Currency { get; set; }
-
-        [JsonProperty("unavailability_reasons")]
-        public string UnavailabilityReasons { get; set; }
+        [JsonProperty("unavailability_reasons")] public string UnavailabilityReasons { get; set; }
     }
 
     public class Receiver
