@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using PracaDyplomowaNT.OrderImport;
 using Soneta.Business;
 using Soneta.Business.UI;
 using Soneta.CRM;
@@ -13,7 +12,7 @@ using Soneta.Magazyny;
 using Soneta.Towary;
 using Soneta.Types;
 
-[assembly: Worker(typeof(OrderImport), typeof(DokHandlowe))]
+[assembly: Worker(typeof(PracaDyplomowaNT.OrderImport.OrderImport), typeof(DokHandlowe))]
 namespace PracaDyplomowaNT.OrderImport
 {
     public class OrderImport
@@ -82,7 +81,7 @@ namespace PracaDyplomowaNT.OrderImport
         {
             var responseStream = new StreamReader(uri);
             string content = responseStream.ReadToEnd();
-            return content.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            return content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private List<OrdersByContractor> GetDeserializedOrdersByContractor(string[] content)
@@ -104,23 +103,22 @@ namespace PracaDyplomowaNT.OrderImport
         private Order DeserializeOrder(string serializedOrder)
         {
             string[] cells = serializedOrder.Split(',');
-            return new Order
-            {
-                ItemId = cells[ItemIdColumn],
-                Quantity = new Quantity(double.Parse(cells[QuantityColumn], CultureInfo.InvariantCulture)),
-                Price = new DoubleCy(double.Parse(cells[PriceColumn], CultureInfo.InvariantCulture)),
-                Cod = int.Parse(cells[CodColumn]) == 1,
-                FirstName = cells[FirstNameColumn],
-                LastName = cells[LastNameColumn],
-                Street = cells[StreetColumn],
-                HouseNumber = cells[HouseNumberColumn],
-                ApartmentNumber = cells[ApartmentNumberColumn],
-                City = cells[CityColumn],
-                PostalCode = cells[PostalCodeColumn],
-                Email = cells[EmailColumn],
-                PhoneNumber = cells[PhoneColumn],
-                TargetPoint = cells[TargetPointColumn]
-            };
+            var order = new Order();
+            order.ItemId = cells[ItemIdColumn];
+            order.Quantity = new Quantity(double.Parse(cells[QuantityColumn], CultureInfo.InvariantCulture));
+            order.Price = new DoubleCy(double.Parse(cells[PriceColumn], CultureInfo.InvariantCulture));
+            order.Cod = int.Parse(cells[CodColumn]) == 1;
+            order.FirstName = cells[FirstNameColumn];
+            order.LastName = cells[LastNameColumn];
+            order.Street = cells[StreetColumn];
+            order.HouseNumber = cells[HouseNumberColumn];
+            order.ApartmentNumber = cells[ApartmentNumberColumn];
+            order.City = cells[CityColumn];
+            order.PostalCode = cells[PostalCodeColumn];
+            order.Email = cells[EmailColumn];
+            order.PhoneNumber = cells[PhoneColumn];
+            order.TargetPoint = cells[TargetPointColumn];
+            return order;
         }
 
         private Kontrahent GetContractor(Order order)
@@ -133,9 +131,7 @@ namespace PracaDyplomowaNT.OrderImport
                     var crm = CRMModule.GetInstance(session);
                     View contractors = crm.Kontrahenci.CreateView();
                     contractors.Condition = new FieldCondition.Equal("Nazwa", $"{order.FirstName} {order.LastName}");
-
                     contractor = contractors.Any() ? (Kontrahent)contractors.First() : CreateContractor(order, crm);
-
                     UpdateContractor(order, contractor);
 
                     transaction.CommitUI();
@@ -154,6 +150,8 @@ namespace PracaDyplomowaNT.OrderImport
             contractor.Nazwa = $"{order.FirstName} {order.LastName}";
             contractor.EMAIL = order.Email;
             contractor.Kontakt.TelefonKomorkowy = order.PhoneNumber;
+            contractor.Adres.KodKraju = "PL";
+            contractor.Adres.Miejscowosc = order.City;
             contractor.Adres.Ulica = order.Street;
             contractor.Adres.NrDomu = order.HouseNumber;
             contractor.Adres.NrLokalu = order.ApartmentNumber;
@@ -164,22 +162,25 @@ namespace PracaDyplomowaNT.OrderImport
 
         private void UpdateContractor(Order order, Kontrahent contractor)
         {
-            if (contractor.EMAIL != order.Email)
+            if (!string.IsNullOrWhiteSpace(order.Email) && contractor.EMAIL != order.Email)
                 contractor.EMAIL = order.Email;
 
-            if (contractor.Kontakt.TelefonKomorkowy != order.PhoneNumber)
+            if (!string.IsNullOrWhiteSpace(order.PhoneNumber) && contractor.Kontakt.TelefonKomorkowy != order.PhoneNumber)
                 contractor.Kontakt.TelefonKomorkowy = order.PhoneNumber;
 
-            if (contractor.Adres.Ulica != order.Street)
+            if (!string.IsNullOrWhiteSpace(order.City) && contractor.Adres.Miejscowosc != order.City)
+                contractor.Adres.Miejscowosc = order.City;
+
+            if (!string.IsNullOrWhiteSpace(order.Street) && contractor.Adres.Ulica != order.Street)
                 contractor.Adres.Ulica = order.Street;
 
-            if (contractor.Adres.NrDomu != order.HouseNumber)
+            if (!string.IsNullOrWhiteSpace(order.HouseNumber) && contractor.Adres.NrDomu != order.HouseNumber)
                 contractor.Adres.NrDomu = order.HouseNumber;
 
-            if (contractor.Adres.NrLokalu != order.ApartmentNumber)
+            if (!string.IsNullOrWhiteSpace(order.ApartmentNumber) && contractor.Adres.NrLokalu != order.ApartmentNumber)
                 contractor.Adres.NrLokalu = order.ApartmentNumber;
 
-            if (contractor.Adres.KodPocztowyS != order.PostalCode)
+            if (!string.IsNullOrWhiteSpace(order.PostalCode) && contractor.Adres.KodPocztowyS != order.PostalCode)
                 contractor.Adres.KodPocztowyS = order.PostalCode;
         }
 
@@ -201,16 +202,24 @@ namespace PracaDyplomowaNT.OrderImport
 
         private void CreateDocuments(List<OrdersByContractor> assignedOrders)
         {
+            int errors = 0;
             for (int i = 0; i < assignedOrders.Count; i++)
             {
                 OrdersByContractor ordersByContractor = assignedOrders[i];
                 Trace.WriteLine($"Odczytywanie danych z pliku", "Progress");
                 Trace.WriteLine(100 * i / assignedOrders.Count, "Progress");
 
-                CreateDocument(ordersByContractor);
+                try
+                {
+                    CreateDocument(ordersByContractor);
+                }
+                catch (Exception ex)
+                {
+                    errors++;
+                }
             }
 
-            _createdDocuments = assignedOrders.Count;
+            _createdDocuments = assignedOrders.Count - errors;
         }
 
         private void CreateDocument(OrdersByContractor ordersByContractor)

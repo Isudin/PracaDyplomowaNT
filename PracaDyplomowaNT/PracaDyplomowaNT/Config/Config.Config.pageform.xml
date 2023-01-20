@@ -5,15 +5,15 @@
           RightName="Page:ConfigPage"
           Priority="100001"
           DataType="Config">
-  <Page Name="ConfigPage" CaptionHtml="Praca Dyplomowa/Config" DataContext="{new Config}">
+  <Page Name="ConfigPage" CaptionHtml="Praca Dyplomowa" DataContext="{new Config}">
     <Group CaptionHtml="Import zamówień">
       <Field CaptionHtml="Cecha z numerem paczkomatu" LabelWidth="50" Width="50" EditValue="{TargetPointFeature}"/>
       <Field CaptionHtml="Cecha określająca czy płatność za pobraniem" LabelWidth="50" Width="50" EditValue="{CodFeature}"/>
       <Field CaptionHtml="Domyślna usługa dostawy" LabelWidth="50" Width="50" EditValue="{DefaultDeliveryService}"/>
     </Group>
     <Group CaptionHtml="ShipX">
-      <Field CaptionHtml="Login ShipX" LabelWidth="50" Width="50" EditValue="{ApiUsername}"/>
-      <Field CaptionHtml="Hasło Shipx" LabelWidth="50" Width="50" EditValue="{ApiToken}" Class="PasswordEdit"/>
+      <Field CaptionHtml="Numer klienta ShipX" LabelWidth="50" Width="50" EditValue="{ApiUsername}"/>
+      <Field CaptionHtml="Token Shipx" LabelWidth="50" Width="50" EditValue="{ApiToken}" Class="PasswordEdit"/>
       <Field CaptionHtml="Cecha z gabarytem paczki" LabelWidth="50" Width="50" EditValue="{ParcelTemplateTypeFeature}"/>
       <Field CaptionHtml="Cecha z numerem śledzenia przesyłki" LabelWidth="50" Width="50" EditValue="{ParcelTrackingNumberFeature}"/>
       <Field CaptionHtml="Cecha z id przesyłki" LabelWidth="50" Width="50" EditValue="{ParcelIdFeature}"/>

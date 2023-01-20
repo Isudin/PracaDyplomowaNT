@@ -63,13 +63,8 @@ namespace PracaDyplomowaNT
 
         public string ApiToken
         {
-            get
-            {
-                string encryptedPassword = GetValueNoLimitChars("ApiToken");
-                return encryptedPassword.Length > 0 ? Tools.Decrypt(encryptedPassword) : null;
-            }
-
-            set => SetValueNoLimitChars(Tools.Encrypt(value), "ApiToken", AttributeType._string);
+            get => GetValueNoLimitChars("ApiToken");
+            set => SetValueNoLimitChars("ApiToken", value, AttributeType._string);
         }
 
         public object GetListParcelTemplateTypeFeature() => GetListFromTable("Towary", FeatureTypeNumber.String);

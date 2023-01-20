@@ -83,7 +83,7 @@ namespace PracaDyplomowaNT
             return res;
         }
 
-        protected string GetValueNoLimitChars(string name = "", string def = "", int propertiesToReset = 10)
+        protected string GetValueNoLimitChars(string name, string def = "", int propertiesToReset = 10)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < propertiesToReset; i++)
@@ -92,7 +92,7 @@ namespace PracaDyplomowaNT
             return sb.ToString();
         }
 
-        protected void SetValueNoLimitChars(string value, string name = "", AttributeType attrType = AttributeType._null, int propertiesToReset = 10)
+        protected void SetValueNoLimitChars(string name, string value, AttributeType attrType = AttributeType._null, int propertiesToReset = 10)
         {
             var startSubstring = 0;
             var length = value.Length;

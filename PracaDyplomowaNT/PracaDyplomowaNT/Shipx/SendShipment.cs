@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 using PracaDyplomowaNT.Shipx;
 using PracaDyplomowaNT.Shipx.Model;
@@ -29,24 +28,56 @@ namespace PracaDyplomowaNT.Shipx
 
             var shipment = new Shipment();
             shipment.SendingMethod = "dispatch_order";
-            shipment.Service = "inpost_locker_standard";
-            shipment.CustomAttributes = new CustomAttributes() { TargetPoint = Document.Features.GetString(Config.TargetPointFeature) };
-            shipment.Receiver = GetReceiver();
+            string targetPoint = Document.Features.GetString(Config.TargetPointFeature);
+            shipment.Service = string.IsNullOrWhiteSpace(targetPoint) ? "inpost_courier_standard" : "inpost_locker_standard";
+            shipment.CustomAttributes = new CustomAttributes() { TargetPoint = targetPoint };
+            shipment.Receiver = GetReceiver(shipment.Service);
             shipment.Parcels = GetParcels();
-            //if (Document.Features.GetBool(Config.CodFeature))
-            //    shipment.Cod = new Cod()
-            //    {
-            //        Amount = (double)Document.BruttoCy.Value,
-            //        Currency = Document.BruttoCy.Symbol
-            //    };
+            if (Document.Features.GetBool(Config.CodFeature))
+            {
+                if (shipment.Service == "inpost_locker_standard")
+                    throw new Exception("Przesyłki paczkomatowe nie obsługują dodatkowych usług.");
+
+                shipment.Cod = new Cod()
+                {
+                    Amount = (double)Document.BruttoCy.Value,
+                    Currency = Document.BruttoCy.Symbol
+                };
+            }
+            AddServices(shipment);
 
             shipment = PostShipment(shipment);
-            System.Threading.Thread.Sleep(2000);
-            shipment = GetShipment(shipment.Id);
+            for (int i = 0; i < 10; i++)
+            {
+
+                System.Threading.Thread.Sleep(2000);
+                shipment = GetShipment(shipment.Id);
+                if (!string.IsNullOrWhiteSpace(shipment.TrackingNumber)) break;
+            }
 
             SaveShipmentData(shipment.TrackingNumber, shipment.Id, shipment.Status);
+            return string.IsNullOrWhiteSpace(shipment.TrackingNumber)
+                ? new MessageBoxInformation("Napotkano błąd", $"Serwer nie zwrócił numeru przesyłki. Sprawdź czy posiadasz środki na koncie InPost.")
+                : new MessageBoxInformation("Sukces", $"Pomyślnie wysłano przesyłkę. Numer przesyłki: {shipment.TrackingNumber}");
+        }
 
-            return new MessageBoxInformation("Sukces", $"Pomyślnie wysłano przesyłkę. Numer przesyłki: {shipment.TrackingNumber}");
+        private void AddServices(Shipment shipment)
+        {
+            var additionalServices = new List<string>();
+            if (Parameters.EmailNotification)
+                additionalServices.Add("email");
+
+            if (Parameters.SmsNotification)
+                additionalServices.Add("sms");
+
+            if (Parameters.SaturdayDelivery)
+                additionalServices.Add("saturday");
+
+            if (additionalServices.Count > 0)
+                if (shipment.Service == "inpost_locker_standard")
+                    throw new Exception("Przesyłki paczkomatowe nie obsługują dodatkowych usług.");
+                else
+                    shipment.AdditionalServices = additionalServices;
         }
 
         private void VerifyDocument()
@@ -55,12 +86,32 @@ namespace PracaDyplomowaNT.Shipx
                 throw new Exception("Paczkę można wysłać tylko dla zatwierdzonych faktur!");
         }
 
-        private Receiver GetReceiver() => new Receiver()
+        private Receiver GetReceiver(string service)
         {
-            Name = Document.Kontrahent.Kod,
-            Email = Document.Kontrahent.EMAIL,
-            Phone = Document.Kontrahent.Kontakt.TelefonKomorkowy
-        };
+            var receiver = new Receiver()
+            {
+                Name = Document.Kontrahent.Nazwa,
+                Email = Document.Kontrahent.EMAIL,
+                Phone = Document.Kontrahent.Kontakt.TelefonKomorkowy,
+            };
+
+            if (service == "inpost_courier_standard")
+            {
+                receiver.FirstName = Document.Kontrahent.Nazwa.Split(' ')[0];
+                receiver.LastName = Document.Kontrahent.Nazwa.Split(' ')[1];
+                receiver.CompanyName = Document.Kontrahent.Nazwa;
+                receiver.Address = new Address
+                {
+                    CountryCode = Document.Kontrahent.KodKraju,
+                    PostCode = Document.Kontrahent.Adres.KodPocztowyS,
+                    City = Document.Kontrahent.Adres.Miejscowosc,
+                    Street = Document.Kontrahent.Adres.Ulica,
+                    BuildingNumber = $"{Document.Kontrahent.Adres.NrDomu} {Document.Kontrahent.Adres.NrLokalu}"
+                };
+            }
+
+            return receiver;
+        }
 
         private List<Parcel> GetParcels()
         {
@@ -124,9 +175,13 @@ namespace PracaDyplomowaNT.Shipx
             RequestsBase request = Requests.Requests.PrepareGetRequest(URL, Config);
             object odpowiedz = request.ApiRequest();
 
-            var deserializer = new JavaScriptSerializer();
-            Shipment odpShipX = deserializer.Deserialize<Shipment>(odpowiedz.ToString());
-            return odpShipX;
+            var settings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                MissingMemberHandling = MissingMemberHandling.Ignore
+            };
+
+            return JsonConvert.DeserializeObject<Shipment>(odpowiedz.ToString(), settings);
         }
 
         private void SaveShipmentData(string trackingNumer, int id, string status)

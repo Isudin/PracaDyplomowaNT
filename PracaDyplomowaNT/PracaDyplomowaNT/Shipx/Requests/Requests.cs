@@ -12,14 +12,14 @@ namespace PracaDyplomowaNT.Shipx.Requests
 
         public static RequestsBase PreparePostRequest(string url, Config config) => PrepareRequest(url, config, "POST");
 
-        private static RequestsBase PrepareRequest(string url, Config config, string METHOD)
+        private static RequestsBase PrepareRequest(string url, Config config, string method)
         {
             var request = new RequestsBase();
             request.URL = url;
             request.ContentType = "application/json";
-            request.METHOD = METHOD;
+            request.Method = method;
             request.Json = "";
-            request.DodajNaglowek("Authorization", string.Format("Bearer {0}", config.ApiToken));
+            request.AddHeader("Authorization", string.Format("Bearer {0}", config.ApiToken));
 
             return request;
         }
